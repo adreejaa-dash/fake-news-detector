@@ -1,8 +1,11 @@
 import pandas as pd
 import joblib
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import LabelEncoder
 from sklearn.linear_model import LogisticRegression
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.ensemble import RandomForestClassifier
@@ -18,17 +21,26 @@ except Exception as e:
 from preprocess import clean_text
 
 print("Loading data...")
-df = pd.read_csv("data/news_full.csv", usecols=["text", "label_number"])
-df = df.dropna(subset=["text", "label_number"])
-df["label_number"] = df["label_number"].astype(int)
+df = pd.read_csv("data/hf_customer_support.csv", usecols=["instruction", "category"])
+df = df.dropna()
+df.rename(columns={"instruction": "text", "category": "label"}, inplace=True)
 
-print(f"Dataset size: {len(df)} rows  |  Label distribution:\n{df['label_number'].value_counts().to_string()}")
+# Drop categories with less than 200 examples
+category_counts = df["label"].value_counts()
+valid_categories = category_counts[category_counts >= 200].index
+df = df[df["label"].isin(valid_categories)]
+
+print(f"Dataset size: {len(df)} rows  |  Label distribution:\n{df['label'].value_counts().to_string()}")
+
+print("Encoding labels...")
+le = LabelEncoder()
+df["label_encoded"] = le.fit_transform(df["label"])
 
 print("Preprocessing text (this may take a while)...")
 df["processed"] = df["text"].apply(clean_text)
 
 X = df["processed"]
-y = df["label_number"]
+y = df["label_encoded"]
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
@@ -39,7 +51,7 @@ X_test_tfidf  = vectorizer.transform(X_test)
 
 if XGBOOST_AVAILABLE:
     third_model = XGBClassifier(n_estimators=200, max_depth=6, learning_rate=0.1,
-                                 eval_metric="logloss",
+                                 eval_metric="mlogloss",
                                  tree_method="hist", n_jobs=-1, random_state=42)
     third_name = "XGBoost"
 else:
@@ -61,41 +73,51 @@ for name, model in models.items():
     preds = model.predict(X_test_tfidf)
 
     acc  = accuracy_score(y_test, preds)
-    prec = precision_score(y_test, preds)
-    rec  = recall_score(y_test, preds)
-    f1   = f1_score(y_test, preds)
+    prec = precision_score(y_test, preds, average="macro", zero_division=0)
+    rec  = recall_score(y_test, preds, average="macro", zero_division=0)
+    f1   = f1_score(y_test, preds, average="macro", zero_division=0)
     cm   = confusion_matrix(y_test, preds)
 
     results[name] = {"model": model, "accuracy": acc, "precision": prec,
-                     "recall": rec, "f1": f1}
+                     "recall": rec, "f1": f1, "cm": cm}
 
     print(f"  Accuracy : {acc:.4f}")
     print(f"  Precision: {prec:.4f}")
     print(f"  Recall   : {rec:.4f}")
     print(f"  F1       : {f1:.4f}")
-    print(f"  Confusion Matrix:\n{cm}")
 print("="*70)
 
 best_name = max(results, key=lambda k: results[k]["f1"])
 best_model = results[best_name]["model"]
 best_acc   = results[best_name]["accuracy"]
+best_cm    = results[best_name]["cm"]
 print(f"\nBest model: {best_name}  (F1={results[best_name]['f1']:.4f})")
 
-print("Saving model and vectorizer...")
+print("Saving model, vectorizer, and label encoder...")
 joblib.dump(best_model, "model.pkl")
 joblib.dump(vectorizer, "vectorizer.pkl")
-
-# Always save LR separately so Flask can use its coef_ for top-word explanations
+joblib.dump(le, "label_encoder.pkl")
 joblib.dump(results["Logistic Regression"]["model"], "lr_model.pkl")
 
 model_info = {
     "name": best_name,
     "accuracy": best_acc,
-    "all_results": {k: {m: v for m, v in r.items() if m != "model"} for k, r in results.items()}
+    "all_results": {k: {m: v for m, v in r.items() if m not in ["model", "cm"]} for k, r in results.items()}
 }
 joblib.dump(model_info, "model_info.pkl")
 
-print("Done! model.pkl, vectorizer.pkl, model_info.pkl saved.")
+print("Plotting confusion matrix for best model...")
+plt.figure(figsize=(10, 8))
+sns.heatmap(best_cm, annot=True, fmt='d', cmap='Blues',
+            xticklabels=le.classes_, yticklabels=le.classes_)
+plt.title(f'Confusion Matrix ({best_name})')
+plt.ylabel('True Label')
+plt.xlabel('Predicted Label')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.savefig('confusion_matrix.png')
+
+print("Done! model.pkl, vectorizer.pkl, label_encoder.pkl, lr_model.pkl, model_info.pkl, and confusion_matrix.png saved.")
 print("\nFull comparison:")
 print(f"{'Model':<30} {'Acc':>6} {'Prec':>6} {'Rec':>6} {'F1':>6}")
 print("-"*58)

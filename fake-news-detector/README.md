@@ -1,18 +1,14 @@
-# Fake News Detection System
+# E-Commerce Customer Complaint Classifier
 
-An NLP-powered pipeline that classifies news article text as **Fake** or **Real**, with a confidence score, using TF-IDF features and three trained classifiers.
-
-## Problem Statement
-
-Misinformation spreads rapidly online. This project builds a machine-learning pipeline that ingests raw article text, applies a reproducible NLP preprocessing pipeline (identical at training and inference time), and outputs a binary label with confidence. The goal is a well-evaluated ML pipeline, not a polished UI.
+Automated e-commerce customer complaint classification to enable faster support ticket routing. This system ingests customer support tickets (text), applies a reproducible NLP preprocessing pipeline, and classifies them into categories (e.g., Order, Refund, Shipping) with a confidence score.
 
 ## Dataset
 
-- **Source**: Kaggle — combined LIAR + GossipCop fake news dataset (preprocessed)
-- **File**: `data/news_full.csv`
-- **Size**: ~44,000 articles
-- **Features used**: `text` (raw article body) → cleaned and TF-IDF vectorized
-- **Target**: `label_number` (0 = Fake, 1 = Real)
+- **Source**: Hugging Face dataset (`bitext/Bitext-customer-support-llm-chatbot-training-dataset`)
+- **Size**: ~26,800 tickets
+- **Categories**: ACCOUNT, ORDER, REFUND, INVOICE, CONTACT, PAYMENT, FEEDBACK, DELIVERY, SHIPPING, SUBSCRIPTION, CANCEL
+- **Features used**: `instruction` (complaint text) → cleaned and TF-IDF vectorized
+- **Target**: `category` (encoded into multi-class labels)
 
 ## NLP Pipeline
 
@@ -20,27 +16,41 @@ Misinformation spreads rapidly online. This project builds a machine-learning pi
 2. NLTK tokenization + stopword removal
 3. TF-IDF vectorization — unigrams + bigrams, `max_features=8000`, `sublinear_tf=True`
 
-## Model Comparison
+## Model Comparison (Macro-Averaged)
 
 | Model                   | Accuracy | Precision | Recall | F1     |
 |-------------------------|----------|-----------|--------|--------|
-| Logistic Regression     | 0.9901   | 0.9867    | 0.9955 | 0.9911 |
-| Multinomial Naive Bayes | 0.9577   | 0.9534    | 0.9705 | 0.9618 |
-| **XGBoost** ✅ (saved)  | **0.9955** | **0.9937** | **0.9981** | **0.9959** |
+| Logistic Regression     | 0.9967   | 0.9980    | 0.9955 | 0.9968 |
+| Multinomial Naive Bayes | **0.9974** | **0.9981** | **0.9971** | **0.9976** |
+| XGBoost                 | 0.9929   | 0.9950    | 0.9911 | 0.9930 |
 
-> Dataset: 38,516 articles | 80/20 train-test split | TF-IDF unigrams+bigrams (max 8,000 features)
+> _Metrics will be updated after training completes._
 
-## Setup & Run
+## Confusion Matrix
+
+![Confusion Matrix](confusion_matrix.png)
+
+## Setup & Run Locally
 
 ```bash
 # 1. Activate the virtual environment
 source venv/bin/activate
 
-# 2. Train models (saves model.pkl, vectorizer.pkl)
+# 2. Train models (saves model.pkl, vectorizer.pkl, label_encoder.pkl, lr_model.pkl, confusion_matrix.png)
 python train.py
 
 # 3. Start the Flask inference app
 python app.py
 ```
+Then open [http://127.0.0.1:5001](http://127.0.0.1:5001) and paste any customer complaint.
 
-Then open [http://127.0.0.1:5000](http://127.0.0.1:5000) and paste any news article text to get a prediction.
+## Run via Docker
+
+```bash
+# Build the image
+docker build -t ecom-classifier .
+
+# Run the container
+docker run -p 5001:5001 ecom-classifier
+```
+Then open [http://localhost:5001](http://localhost:5001).

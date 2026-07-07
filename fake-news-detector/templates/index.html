@@ -2,30 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fake News Detector</title>
+  <title>Customer Complaint Classifier</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background-color: #f9fafb;
+      color: #1f2937;
+    }
+    .container {
+      background-color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      margin-top: 0;
+      color: #111827;
+    }
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-family: inherit;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    .error {
+      background-color: #fee2e2;
+      color: #b91c1c;
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      border-left: 4px solid #ef4444;
+    }
+    .result-box {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #e5e7eb;
+    }
+    .label {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #047857;
+    }
+    .confidence {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+    .meta {
+      color: #6b7280;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+  </style>
 </head>
 <body>
-  <h1>Fake News Detector</h1>
-  <form method="POST">
-    <label for="article_text"><strong>Paste article text:</strong></label><br>
-    <textarea id="article_text" name="article_text" rows="12" cols="80" placeholder="Paste news article text here..."></textarea><br><br>
-    <button type="submit">Analyze</button>
-  </form>
+  <div class="container">
+    <h1>Customer Complaint Classifier</h1>
+    <p>Automatically categorize support tickets to route them faster.</p>
+    
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
 
-  {% if result %}
-  <hr>
-  <h2>Result: {{ result.label }}</h2>
-  <p><strong>Confidence:</strong> {{ result.confidence }}%</p>
-  <p><strong>Model used:</strong> {{ result.model }} (test accuracy: {{ result.model_accuracy }}%)</p>
+    <form method="POST">
+      <label for="complaint_text"><strong>Paste a customer complaint:</strong></label><br><br>
+      <textarea id="complaint_text" name="complaint_text" rows="8" placeholder="e.g., 'My order #12345 hasn't arrived yet' or 'I need a refund for the defective item I received.'">{{ request.form.get('complaint_text', '') }}</textarea><br><br>
+      <button type="submit">Classify Ticket</button>
+    </form>
 
-  {% if result.top_words %}
-  <h3>Top influential words ({{ result.label }}):</h3>
-  <ul>
-    {% for word, score in result.top_words %}
-    <li>{{ word }} ({{ score }})</li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-  {% endif %}
+    {% if result %}
+    <div class="result-box">
+      <div>Predicted Category: <span class="label">{{ result.label }}</span></div>
+      <div style="margin-top: 0.5rem;">Confidence: <span class="confidence">{{ result.confidence }}%</span></div>
+      <div class="meta">Model used: {{ result.model }} (Test accuracy: {{ result.model_accuracy }}%)</div>
+
+      {% if result.top_words %}
+      <h3 style="margin-bottom: 0.5rem;">Top influential keywords:</h3>
+      <ul style="margin-top: 0;">
+        {% for word, score in result.top_words %}
+        <li>{{ word }} <span style="color: #6b7280; font-size: 0.875rem;">({{ score }})</span></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
 </body>
 </html>
