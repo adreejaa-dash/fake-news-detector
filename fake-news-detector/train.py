@@ -85,6 +85,9 @@ print("Saving model and vectorizer...")
 joblib.dump(best_model, "model.pkl")
 joblib.dump(vectorizer, "vectorizer.pkl")
 
+# Always save LR separately so Flask can use its coef_ for top-word explanations
+joblib.dump(results["Logistic Regression"]["model"], "lr_model.pkl")
+
 model_info = {
     "name": best_name,
     "accuracy": best_acc,

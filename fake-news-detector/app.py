@@ -1,3 +1,4 @@
+import os
 import joblib
 from flask import Flask, render_template, request
 from preprocess import clean_text
@@ -11,14 +12,17 @@ model_info = joblib.load("model_info.pkl")
 model_name = model_info["name"]
 model_acc  = model_info["accuracy"]
 
+# Load LR model for top-word explanations (has coef_), fallback to best model
+lr_model = joblib.load("lr_model.pkl") if os.path.exists("lr_model.pkl") else model
+
 TOP_WORDS = 10
 
 
 def get_top_words(text_vec, predicted_class):
-    if not hasattr(model, "coef_"):
+    if not hasattr(lr_model, "coef_"):
         return []
     feature_names = vectorizer.get_feature_names_out()
-    coef = model.coef_[0]
+    coef = lr_model.coef_[0]
     scores = text_vec.toarray()[0] * coef
     if predicted_class == 0:
         scores = -scores
@@ -50,4 +54,5 @@ def index():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=True, port=port)
