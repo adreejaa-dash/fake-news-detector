@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fake News Detector</title>
+</head>
+<body>
+  <h1>Fake News Detector</h1>
+  <form method="POST">
+    <label for="article_text"><strong>Paste article text:</strong></label><br>
+    <textarea id="article_text" name="article_text" rows="12" cols="80" placeholder="Paste news article text here..."></textarea><br><br>
+    <button type="submit">Analyze</button>
+  </form>
+
+  {% if result %}
+  <hr>
+  <h2>Result: {{ result.label }}</h2>
+  <p><strong>Confidence:</strong> {{ result.confidence }}%</p>
+  <p><strong>Model used:</strong> {{ result.model }} (test accuracy: {{ result.model_accuracy }}%)</p>
+
+  {% if result.top_words %}
+  <h3>Top influential words ({{ result.label }}):</h3>
+  <ul>
+    {% for word, score in result.top_words %}
+    <li>{{ word }} ({{ score }})</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}
+</body>
+</html>
