@@ -6,6 +6,6 @@ services:
     ports:
       - "5001:5001"
     environment:
-      - PORT=5001
+      - PORT=5001 
       - FLASK_ENV=production
     restart: unless-stopped
