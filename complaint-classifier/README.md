@@ -6,9 +6,9 @@ Automated e-commerce customer complaint classification to enable faster support 
 
 - **Source**: Hugging Face dataset (`bitext/Bitext-customer-support-llm-chatbot-training-dataset`)
 - **Size**: ~26,800 tickets
-- **Categories**: 27 granular intent labels (e.g., cancel_order, payment_issue, get_refund, track_order, complaint, delete_account, etc.)
+- **Categories**: 9 realistic e-commerce support categories (e.g., Damaged / Defective Product, Order Not Received / Shipping Delay, Refund / Return Request, Billing / Payment Issue, etc.)
 - **Features used**: `instruction` (complaint text) → cleaned and TF-IDF vectorized
-- **Target**: `intent` (encoded into multi-class labels)
+- **Target**: mapped `intent` (encoded into multi-class labels)
 
 ## NLP Pipeline
 
@@ -20,9 +20,9 @@ Automated e-commerce customer complaint classification to enable faster support 
 
 | Model                   | Accuracy | Precision | Recall | F1     |
 |-------------------------|----------|-----------|--------|--------|
-| Logistic Regression     | **0.9913** | **0.9915** | **0.9913** | **0.9913** |
-| Multinomial Naive Bayes | 0.9905   | 0.9907    | 0.9905 | 0.9905 |
-| XGBoost                 | 0.9829   | 0.9831    | 0.9829 | 0.9829 |
+| Logistic Regression     | 0.9967   | 0.9969    | 0.9956 | 0.9963 |
+| Multinomial Naive Bayes | **0.9974** | **0.9978** | **0.9965** | **0.9971** |
+| XGBoost                 | 0.9924   | 0.9918    | 0.9908 | 0.9913 |
 
 > _Metrics will be updated after training completes._
 

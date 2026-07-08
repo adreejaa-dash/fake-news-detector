@@ -65,12 +65,27 @@ def index():
                 label = le.inverse_transform([prediction])[0]
                 top_words = get_top_words(vec, prediction)
                 
+                # Suggested Routing Map
+                routing_map = {
+                    "Order Cancellation": "Orders Team",
+                    "Order Not Received / Shipping Delay": "Shipping & Fulfillment",
+                    "Billing / Payment Issue": "Billing Department",
+                    "Refund / Return Request": "Returns & Refunds",
+                    "Damaged / Defective Product": "Returns & Refunds",
+                    "Wrong Item Delivered": "Returns & Refunds",
+                    "Account / Login Issue": "Technical Support",
+                    "Product Quality / Not as Described": "Quality Assurance",
+                    "Customer Service Complaint": "Escalation Team"
+                }
+                suggested_routing = routing_map.get(label, "General Support")
+                
                 result = {
                     "label": label,
                     "confidence": confidence,
                     "model": model_name,
                     "model_accuracy": round(model_acc * 100, 2),
                     "top_words": top_words,
+                    "routing": suggested_routing
                 }
     
     return render_template("index.html", result=result, error=error)

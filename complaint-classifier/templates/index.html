@@ -102,17 +102,24 @@
     {% if result %}
     <div class="result-box">
       <div>Predicted Category: <span class="label">{{ result.label }}</span></div>
-      <div style="margin-top: 0.5rem;">Confidence: <span class="confidence">{{ result.confidence }}%</span></div>
-      <div class="meta">Model used: {{ result.model }} (Test accuracy: {{ result.model_accuracy }}%)</div>
+      <div style="margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+        <div>Confidence: <span class="confidence">{{ result.confidence }}%</span></div>
+        <div style="font-weight: 500; color: #9ca3af;">Suggested Routing: <span style="color: #f3f4f6;">{{ result.routing }}</span></div>
+      </div>
+      
+      <details style="margin-top: 1.5rem; background-color: #374151; padding: 1rem; border-radius: 4px;">
+        <summary style="cursor: pointer; color: #9ca3af; font-weight: 500;">Show technical details</summary>
+        <div class="meta" style="margin-top: 1rem;">Model used: {{ result.model }} (Test accuracy: {{ result.model_accuracy }}%)</div>
 
-      {% if result.top_words %}
-      <h3 style="margin-bottom: 0.5rem;">Top influential keywords:</h3>
-      <ul style="margin-top: 0;">
-        {% for word, score in result.top_words %}
-        <li>{{ word }} <span style="color: #6b7280; font-size: 0.875rem;">({{ score }})</span></li>
-        {% endfor %}
-      </ul>
-      {% endif %}
+        {% if result.top_words %}
+        <h3 style="margin-top: 1rem; margin-bottom: 0.5rem; color: #d1d5db; font-size: 1rem;">Top influential keywords:</h3>
+        <ul style="margin-top: 0;">
+          {% for word, score in result.top_words %}
+          <li>{{ word }} <span style="color: #9ca3af; font-size: 0.875rem;">({{ score }})</span></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </details>
     </div>
     {% endif %}
   </div>

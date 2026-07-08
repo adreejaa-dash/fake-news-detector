@@ -25,6 +25,38 @@ df = pd.read_csv("data/hf_customer_support.csv", usecols=["instruction", "intent
 df = df.dropna()
 df.rename(columns={"instruction": "text", "intent": "label"}, inplace=True)
 
+INTENT_MAPPING = {
+    'cancel_order': 'Order Cancellation',
+    'change_order': 'Order Cancellation',
+    'change_shipping_address': 'Order Not Received / Shipping Delay',
+    'check_cancellation_fee': 'Order Cancellation',
+    'check_invoice': 'Billing / Payment Issue',
+    'check_payment_methods': 'Billing / Payment Issue',
+    'check_refund_policy': 'Refund / Return Request',
+    'complaint': 'Damaged / Defective Product',
+    'contact_customer_service': 'Customer Service Complaint',
+    'contact_human_agent': 'Customer Service Complaint',
+    'create_account': 'Account / Login Issue',
+    'delete_account': 'Account / Login Issue',
+    'delivery_options': 'Order Not Received / Shipping Delay',
+    'delivery_period': 'Order Not Received / Shipping Delay',
+    'edit_account': 'Account / Login Issue',
+    'get_invoice': 'Billing / Payment Issue',
+    'get_refund': 'Refund / Return Request',
+    'newsletter_subscription': 'Account / Login Issue',
+    'payment_issue': 'Billing / Payment Issue',
+    'place_order': 'Wrong Item Delivered',
+    'recover_password': 'Account / Login Issue',
+    'registration_problems': 'Account / Login Issue',
+    'review': 'Product Quality / Not as Described',
+    'set_up_shipping_address': 'Order Not Received / Shipping Delay',
+    'switch_account': 'Account / Login Issue',
+    'track_order': 'Order Not Received / Shipping Delay',
+    'track_refund': 'Refund / Return Request'
+}
+df['label'] = df['label'].map(INTENT_MAPPING)
+df = df.dropna(subset=['label'])
+
 # Drop categories with less than 200 examples
 category_counts = df["label"].value_counts()
 valid_categories = category_counts[category_counts >= 200].index
